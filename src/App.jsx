@@ -1,33 +1,43 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
+import { useEffect, useState } from 'react'
+import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import './App.css'
+import db from './utils/db'
+
+
+function Contact({ name, email, id, }) {
+  return (
+    <article>
+      <h2>{ name }</h2>
+      <h3><em>Email:</em> { email }</h3>
+    </article>
+  )
+}
 
 function App() {
-  const [count, setCount] = useState(0)
+  
+  const [contacts, setContacts] = useState([]);
+  
+  // Fetch the contact data from firestore
+  async function getContacts(db) {
+    const contactsCol = query(collection(db, "contact"), orderBy("lastName", "asc"));
+    const contactsSnapshot = await getDocs(contactsCol);
+    const contacts = contactsSnapshot.docs.map(doc => doc.data());
+    setContacts(contacts);
+  }
+
+  // When the page loads and components mounts, this will run
+  useEffect(() => {
+    getContacts(db);
+  }, []);
 
   return (
-    <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </div>
+    <>
+      <h1>Contact List</h1>
+
+      <main>
+        {contacts.map(contact => <Contact name={contacts.firstName + " " + contacts.lastName} />)}
+      </main>
+    </>
   )
 }
 
